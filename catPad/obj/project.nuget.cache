@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "dgSpecHash": "Nl2/2nARfsKELu7ACSNwZyp15Jbb+MWcvgSYI6GZSbQbFyS2NEa8/dj7qWAHBlyGvyFni3cQciTf2dt3Rxu/kA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\jpwas\\OneDrive\\Desktop\\catpad\\catPad\\catPad.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\jpwas\\.nuget\\packages\\freespire.doc\\11.6.0\\freespire.doc.11.6.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\microsoft.win32.systemevents\\6.0.0\\microsoft.win32.systemevents.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.drawing.common\\6.0.0\\system.drawing.common.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.formats.asn1\\6.0.0\\system.formats.asn1.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.io.packaging\\4.5.0\\system.io.packaging.4.5.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.security.accesscontrol\\6.0.0\\system.security.accesscontrol.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.security.cryptography.pkcs\\6.0.0\\system.security.cryptography.pkcs.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.security.cryptography.xml\\6.0.0\\system.security.cryptography.xml.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.security.permissions\\6.0.0\\system.security.permissions.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.text.encoding.codepages\\6.0.0\\system.text.encoding.codepages.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\system.windows.extensions\\6.0.0\\system.windows.extensions.6.0.0.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\xceed.document.net\\2.5.23177.2123\\xceed.document.net.2.5.23177.2123.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\xceed.pdf\\2.5.23177.2123\\xceed.pdf.2.5.23177.2123.nupkg.sha512",
+    "C:\\Users\\jpwas\\.nuget\\packages\\xceed.words.net\\2.5.23177.2123\\xceed.words.net.2.5.23177.2123.nupkg.sha512"
+  ],
+  "logs": []
+}
