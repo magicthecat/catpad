@@ -3,6 +3,7 @@ using System.IO;
 using Spire.Doc;
 using Spire.Doc.Documents;
 using Spire.Doc.Fields;
+using System.Drawing;
 
 namespace catPad
 {
@@ -12,6 +13,10 @@ namespace catPad
         MenuStrip menuStrip;
         string currentFilePath = null;
         bool unsavedChanges = false;
+        float currentFontSize = 10;
+
+        ToolStripButton zoomInButton;
+        ToolStripButton zoomOutButton;
 
         public Form1()
         {
@@ -21,6 +26,9 @@ namespace catPad
             this.Controls.Add(menuStrip);
 
             ToolStripMenuItem fileMenuItem = new ToolStripMenuItem("&File");
+
+            ToolStripMenuItem newMenuItem = new ToolStripMenuItem("&New", null, new EventHandler(NewMenuItem_Click), Keys.Control | Keys.N);
+            fileMenuItem.DropDownItems.Add(newMenuItem);
 
             ToolStripMenuItem openMenuItem = new ToolStripMenuItem("&Open", null, new EventHandler(OpenMenuItem_Click), Keys.Control | Keys.O);
             fileMenuItem.DropDownItems.Add(openMenuItem);
@@ -36,11 +44,21 @@ namespace catPad
 
             menuStrip.Items.Add(fileMenuItem);
 
+            zoomInButton = new ToolStripButton("Zoom In");
+            zoomInButton.Click += new EventHandler(ZoomInButton_Click);
+
+            zoomOutButton = new ToolStripButton("Zoom Out");
+            zoomOutButton.Click += new EventHandler(ZoomOutButton_Click);
+
+            menuStrip.Items.Add(zoomInButton);
+            menuStrip.Items.Add(zoomOutButton);
+
             textBox = new System.Windows.Forms.TextBox
             {
                 Location = new System.Drawing.Point(0, menuStrip.Height),
                 Multiline = true,
-                ScrollBars = ScrollBars.Both
+                ScrollBars = ScrollBars.Both,
+                Font = new Font("Microsoft Sans Serif", currentFontSize)
             };
 
             textBox.TextChanged += TextBox_TextChanged;
@@ -173,6 +191,21 @@ namespace catPad
                 document.SaveToFile(saveFileDialog.FileName, FileFormat.Docx);
             }
         }
+
+        private void NewMenuItem_Click(object sender, EventArgs e)
+        {
+            if (unsavedChanges)
+            {
+                // If there are unsaved changes, save the current document first
+                SaveMenuItem_Click(sender, e);
+            }
+
+            // Clear the text box and reset the current file path to create a new document
+            textBox.Clear();
+            currentFilePath = null;
+            unsavedChanges = false;
+            UpdateTitle();
+        }
         private void UpdateTitle()
         {
             string title = "CatPad - ";
@@ -191,6 +224,24 @@ namespace catPad
             }
 
             this.Text = title;
+        }
+
+        private void ZoomInButton_Click(object sender, EventArgs e)
+        {
+            if (currentFontSize < 72)  // Maximum size of 72
+            {
+                currentFontSize += 2;
+                textBox.Font = new Font("Microsoft Sans Serif", currentFontSize);
+            }
+        }
+
+        private void ZoomOutButton_Click(object sender, EventArgs e)
+        {
+            if (currentFontSize > 2)  // Minimum size of 2
+            {
+                currentFontSize -= 2;
+                textBox.Font = new Font("Microsoft Sans Serif", currentFontSize);
+            }
         }
     }
 }
