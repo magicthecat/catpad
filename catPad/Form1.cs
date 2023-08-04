@@ -4,6 +4,9 @@ using Spire.Doc;
 using Spire.Doc.Documents;
 using Spire.Doc.Fields;
 using System.Drawing;
+using System.Text.RegularExpressions;
+using System.Text;
+using Helpers;
 
 namespace catPad
 {
@@ -17,6 +20,8 @@ namespace catPad
 
         ToolStripButton zoomInButton;
         ToolStripButton zoomOutButton;
+
+        TextProcessor textProcessor = new TextProcessor();
 
         public Form1()
         {
@@ -41,6 +46,9 @@ namespace catPad
 
             ToolStripMenuItem exportAsDocMenuItem = new ToolStripMenuItem("Export as &Doc", null, new EventHandler(ExportAsDocMenuItem_Click));
             fileMenuItem.DropDownItems.Add(exportAsDocMenuItem);
+
+            ToolStripMenuItem exportAsCsvMenuItem = new ToolStripMenuItem("Export as &CSV", null, new EventHandler(ExportAsCsvMenuItem_Click));
+            fileMenuItem.DropDownItems.Add(exportAsCsvMenuItem);
 
             menuStrip.Items.Add(fileMenuItem);
 
@@ -151,44 +159,8 @@ namespace catPad
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                string[] lines = textBox.Text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                Document document = new Document();
-                Section section = document.AddSection();
-
-                foreach (string line in lines)
-                {
-                    Paragraph paragraph = section.AddParagraph();
-                    if (line.StartsWith("*"))
-                    {
-                        // Bullet point
-                        paragraph.ListFormat.ApplyBulletStyle();
-                        paragraph.AppendText(line.Substring(1));
-                    }
-                    else if (line.StartsWith("|"))
-                    {
-                        // Title
-                        TextRange textRange = paragraph.AppendText(line.Substring(1));
-                        textRange.CharacterFormat.Bold = true;
-                        textRange.CharacterFormat.FontSize = 20;
-                    }
-
-                    else if (line.StartsWith("||"))
-                    {
-                        // Title
-                        TextRange textRange = paragraph.AppendText(line.Substring(2));
-                        textRange.CharacterFormat.Bold = true;
-                        textRange.CharacterFormat.FontSize = 15;
-                    }
-
-                    else
-                    {
-                        // Regular text
-                        paragraph.AppendText(line);
-
-                    }
-                }
-
-                document.SaveToFile(saveFileDialog.FileName, FileFormat.Docx);
+                Document doc = textProcessor.ProcessToDoc(textBox.Text);
+                doc.SaveToFile(saveFileDialog.FileName, FileFormat.Docx);
             }
         }
 
@@ -243,5 +215,23 @@ namespace catPad
                 textBox.Font = new Font("Microsoft Sans Serif", currentFontSize);
             }
         }
+
+
+
+        private void ExportAsCsvMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Export as CSV"
+            };
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string csvText = textProcessor.ProcessToCsv(textBox.Text);
+                File.WriteAllText(saveFileDialog.FileName, csvText);
+            }
+        }
+
     }
 }

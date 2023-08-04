@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "iqDKIyZ0cyHkrrmkKWzSpcyRcdToVARDwdpMWnIuVGv+72HXojRNmt8tQTMWR9n5oNUsunjunmzLyGQ5spi65w==",
+  "dgSpecHash": "Nl2/2nARfsKELu7ACSNwZyp15Jbb+MWcvgSYI6GZSbQbFyS2NEa8/dj7qWAHBlyGvyFni3cQciTf2dt3Rxu/kA==",
   "success": true,
   "projectFilePath": "C:\\Users\\jpwas\\OneDrive\\Desktop\\catpad\\catPad\\catPad.csproj",
   "expectedPackageFiles": [
@@ -18,10 +18,7 @@
     "C:\\Users\\jpwas\\.nuget\\packages\\system.windows.extensions\\6.0.0\\system.windows.extensions.6.0.0.nupkg.sha512",
     "C:\\Users\\jpwas\\.nuget\\packages\\xceed.document.net\\2.5.23177.2123\\xceed.document.net.2.5.23177.2123.nupkg.sha512",
     "C:\\Users\\jpwas\\.nuget\\packages\\xceed.pdf\\2.5.23177.2123\\xceed.pdf.2.5.23177.2123.nupkg.sha512",
-    "C:\\Users\\jpwas\\.nuget\\packages\\xceed.words.net\\2.5.23177.2123\\xceed.words.net.2.5.23177.2123.nupkg.sha512",
-    "C:\\Users\\jpwas\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\7.0.9\\microsoft.netcore.app.runtime.win-x64.7.0.9.nupkg.sha512",
-    "C:\\Users\\jpwas\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\7.0.9\\microsoft.windowsdesktop.app.runtime.win-x64.7.0.9.nupkg.sha512",
-    "C:\\Users\\jpwas\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\7.0.9\\microsoft.aspnetcore.app.runtime.win-x64.7.0.9.nupkg.sha512"
+    "C:\\Users\\jpwas\\.nuget\\packages\\xceed.words.net\\2.5.23177.2123\\xceed.words.net.2.5.23177.2123.nupkg.sha512"
   ],
   "logs": []
 }
