@@ -23,6 +23,8 @@ namespace catPad
         Panel sidePanel;
         RichTextBox richTextBox;
 
+        ToolStripLabel headingCountLabel;
+
 
 
         TextProcessor textProcessor = new TextProcessor();
@@ -30,6 +32,8 @@ namespace catPad
         public Form1()
         {
             InitializeComponent();
+
+
 
             // Initializing SplitContainer
             splitContainer = new SplitContainer();
@@ -49,23 +53,29 @@ namespace catPad
             ToolStripMenuItem fileMenuItem = new ToolStripMenuItem("&File");
             menuStrip.Items.Add(fileMenuItem);
 
-            CreateMenuItems(fileMenuItem,
-         ("&New", new EventHandler(NewMenuItem_Click), Keys.Control | Keys.N),
-         ("&Open", new EventHandler(OpenMenuItem_Click), Keys.Control | Keys.O),
-         ("Save &As", new EventHandler(SaveAsMenuItem_Click), null),
-         ("Export as &Doc", new EventHandler(ExportAsDocMenuItem_Click), null),
-         ("Export as &CSV", new EventHandler(ExportAsCsvMenuItem_Click), null),
-          ("Full Screen", new EventHandler(FullScreenMenuItem_Click), Keys.Control | Keys.Shift | Keys.A)
-     );
 
 
-            CreateStripMenuButtons(
+
+            Helpers.Menu.CreateMenuItems(fileMenuItem,
+          ("&New", new EventHandler(NewMenuItem_Click), Keys.Control | Keys.N),
+          ("&Open", new EventHandler(OpenMenuItem_Click), Keys.Control | Keys.O),
+          ("Save &As", new EventHandler(SaveAsMenuItem_Click), null),
+          ("Export as &Doc", new EventHandler(ExportAsDocMenuItem_Click), null),
+          ("Export as &CSV", new EventHandler(ExportAsCsvMenuItem_Click), null),
+           ("Full Screen", new EventHandler(FullScreenMenuItem_Click), Keys.Control | Keys.Shift | Keys.A)
+      );
+
+
+            Helpers.Menu.CreateStripMenuButtons(menuStrip,
   ("Zoom In", null, new EventHandler(ZoomInButton_Click), Keys.Control | Keys.Shift | Keys.Oemplus),
     ("Zoom Out", null, new EventHandler(ZoomOutButton_Click), Keys.Control | Keys.Shift | Keys.OemMinus),
     ("Preview", null, new EventHandler(PreviewMarkdownButton_Click), Keys.Control | Keys.Shift | Keys.P),
             ("Format Markdown", null, new EventHandler(FormatMarkdownButton_Click), Keys.Control | Keys.Shift | Keys.F)
 
 );
+
+            headingCountLabel = new ToolStripLabel();
+            menuStrip.Items.Add(headingCountLabel);
 
             textBox = new System.Windows.Forms.TextBox
             {
@@ -86,16 +96,34 @@ namespace catPad
 
 
             splitContainer.Panel1.Controls.Add(textBox);
+
+
             textBox.TextChanged += TextBox_TextChanged;
 
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.Form1_Resize);
         }
 
+        private void UpdateHeadingCount()
+        {
+            var lines = textBox.Text.Split('\n');
+            int count = 0;
+
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("# "))
+                {
+                    count++;
+                }
+            }
+
+            headingCountLabel.Text = $"Heading count: {count}";
+        }
 
         private void FormatMarkdownButton_Click(object sender, EventArgs e)
         {
             textBox.Text = CorrectMarkdown(textBox.Text);
+            UpdateHeadingCount();
         }
         private string CorrectMarkdown(string text)
         {
@@ -110,21 +138,48 @@ namespace catPad
             text = Regex.Replace(text, @"(\n|^)(\d+\.)\s*(\w)", "$1$2 $3");
             text = Regex.Replace(text, @"(\n|^)(\d+\))\s*(\w)", "$1$2 $3");
 
+            // Initialize dictionary to store global variables
+            Dictionary<string, string> globals = new Dictionary<string, string>();
+
+            // Split the text into lines
+            string[] lines = text.Split('\n');
+
+            // Process each line
+            for (int i = 0; i < lines.Length; i++)
+            {
+                // Check for GLOBALS block start
+                if (lines[i].Trim() == "/* GLOBALS")
+                {
+                    // Process lines until end of GLOBALS block
+                    while (lines[++i].Trim() != "*/")
+                    {
+                        // Split line into name and value
+                        string[] parts = lines[i].Split(':', 2);
+                        if (parts.Length == 2)
+                        {
+                            // Remove '=' from variable name and trim both name and value
+                            string name = parts[0].Trim().TrimStart('=');
+                            string value = parts[1].Trim();
+
+                            // Add to globals dictionary
+                            globals[name] = value;
+                        }
+                    }
+                }
+
+                // Replace variables in line
+                foreach (var global in globals)
+                {
+                    lines[i] = lines[i].Replace("{" + global.Key + "}", global.Value);
+                }
+            }
+
+            // Combine lines back into single string
+            text = string.Join("\n", lines);
+
             return text;
         }
 
-        private void CreateStripMenuButtons(params (string Name, Image Image, EventHandler ClickEvent, Keys? ShortcutKeys)[] itemParams)
-        {
-            foreach (var itemParam in itemParams)
-            {
-                var menuItem = new ToolStripMenuItem(itemParam.Name, itemParam.Image, itemParam.ClickEvent);
-                if (itemParam.ShortcutKeys.HasValue)
-                {
-                    menuItem.ShortcutKeys = itemParam.ShortcutKeys.Value;
-                }
-                menuStrip.Items.Add(menuItem);
-            }
-        }
 
         private void FullScreenMenuItem_Click(object sender, EventArgs e)
         {
@@ -150,30 +205,17 @@ namespace catPad
                 this.SetBounds(left, top, width, height);
             }
         }
-        private void CreateMenuItems(ToolStripMenuItem parentMenuItem, params (string title, EventHandler eventHandler, Keys? shortcutKeys)[] menuItems)
-        {
-            foreach (var (title, eventHandler, shortcutKeys) in menuItems)
-            {
-                ToolStripMenuItem menuItem = new ToolStripMenuItem(title, null, eventHandler);
-
-                if (shortcutKeys.HasValue)
-                {
-                    menuItem.ShortcutKeys = shortcutKeys.Value;
-                }
-
-                parentMenuItem.DropDownItems.Add(menuItem);
-            }
-        }
 
         private void TextBox_TextChanged(object sender, EventArgs e)
         {
+
             unsavedChanges = true;
             UpdateTitle();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            textBox.Text = "Hello, world!";
+            textBox.Text = "/* GLOBALS */";
             ResizeTextBox();
             UpdateTitle();
         }
@@ -286,18 +328,17 @@ namespace catPad
             this.Text = title;
         }
 
+
         private void ZoomInButton_Click(object sender, EventArgs e)
         {
             // Create the Font object for the textBox.
             Font oldFont = textBox.Font;
-            Font newFont = new Font(oldFont.FontFamily, oldFont.Size + 2, oldFont.Style);
-            textBox.Font = newFont;
+            textBox.Font = Helpers.FontHelper.IncreaseFontSize(oldFont, 2);
             oldFont.Dispose();
 
             // Create the Font object for the richTextBox.
             oldFont = richTextBox.Font;
-            newFont = new Font(oldFont.FontFamily, oldFont.Size + 2, oldFont.Style);
-            richTextBox.Font = newFont;
+            richTextBox.Font = Helpers.FontHelper.IncreaseFontSize(oldFont, 2);
             oldFont.Dispose();
         }
 
@@ -305,14 +346,12 @@ namespace catPad
         {
             // Create the Font object for the textBox.
             Font oldFont = textBox.Font;
-            Font newFont = new Font(oldFont.FontFamily, oldFont.Size - 2, oldFont.Style);
-            textBox.Font = newFont;
+            textBox.Font = Helpers.FontHelper.DecreaseFontSize(oldFont, 2);
             oldFont.Dispose();
 
             // Create the Font object for the richTextBox.
             oldFont = richTextBox.Font;
-            newFont = new Font(oldFont.FontFamily, oldFont.Size - 2, oldFont.Style);
-            richTextBox.Font = newFont;
+            richTextBox.Font = Helpers.FontHelper.DecreaseFontSize(oldFont, 2);
             oldFont.Dispose();
         }
 
@@ -344,9 +383,28 @@ namespace catPad
             var lines = textBox.Text.Split('\n');
             List<string> orderedList = null;
             int orderedListLineNum = 1;
+            bool isGlobalSection = false;
+
 
             foreach (var line in lines)
             {
+
+                if (line.Trim() == "/* GLOBALS")
+                {
+                    isGlobalSection = true;
+                }
+
+                if (line.Trim() == "*/")
+                {
+                    isGlobalSection = false;
+                    continue;
+                }
+
+                if (isGlobalSection)
+                {
+                    continue;
+                }
+
                 if (Regex.IsMatch(line, @"^\d+\. ")) // Check if line starts with a number followed by a dot indicating an ordered list.
                 {
                     // We're in an ordered list

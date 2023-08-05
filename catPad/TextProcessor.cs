@@ -72,7 +72,6 @@ namespace Helpers
 
             return markdownPreview.ToString();
         }
-
         public string ProcessToCsv(string text)
         {
             string[] tickets = text.Split(new[] { "///" }, StringSplitOptions.None);
@@ -86,8 +85,26 @@ namespace Helpers
                 string issueType = "story";
                 StringBuilder description = new StringBuilder();
 
+                bool isGlobalSection = false;
+
                 foreach (string line in lines)
                 {
+                    if (line.Trim() == "/* GLOBALS")
+                    {
+                        isGlobalSection = true;
+                    }
+
+                    if (line.Trim() == "*/")
+                    {
+                        isGlobalSection = false;
+                        continue;
+                    }
+
+                    if (isGlobalSection)
+                    {
+                        continue;
+                    }
+
                     if (line.StartsWith("# "))
                     {
                         title = line.Substring(2);
@@ -122,8 +139,26 @@ namespace Helpers
             Document document = new Document();
             Section section = document.AddSection();
 
+            bool isGlobalSection = false;
+
             foreach (string line in lines)
             {
+                if (line.Trim() == "/* GLOBALS")
+                {
+                    isGlobalSection = true;
+                }
+
+                if (line.Trim() == "*/")
+                {
+                    isGlobalSection = false;
+                    continue;
+                }
+
+                if (isGlobalSection)
+                {
+                    continue;
+                }
+
                 Paragraph paragraph = section.AddParagraph();
                 if (line.StartsWith("* "))
                 {
@@ -160,8 +195,6 @@ namespace Helpers
 
             return document;
         }
-
-
     }
 
 
