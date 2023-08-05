@@ -13,13 +13,17 @@ namespace catPad
     public partial class Form1 : Form
     {
         System.Windows.Forms.TextBox textBox;
-        MenuStrip menuStrip;
+
         string currentFilePath = null;
         bool unsavedChanges = false;
         float currentFontSize = 10;
 
-        ToolStripButton zoomInButton;
-        ToolStripButton zoomOutButton;
+        MenuStrip menuStrip;
+        SplitContainer splitContainer;
+        Panel sidePanel;
+        RichTextBox richTextBox;
+
+
 
         TextProcessor textProcessor = new TextProcessor();
 
@@ -27,54 +31,138 @@ namespace catPad
         {
             InitializeComponent();
 
+            // Initializing SplitContainer
+            splitContainer = new SplitContainer();
+            splitContainer.Dock = DockStyle.Fill;
+            splitContainer.Panel1MinSize = 0;
+            this.Controls.Add(splitContainer);
+
+            // Initializing Side Panel
+            sidePanel = new Panel();
+            sidePanel.Dock = DockStyle.Fill;
+            sidePanel.BackColor = Color.LightGray;
+            splitContainer.Panel2.Controls.Add(sidePanel);
+
             menuStrip = new MenuStrip();
             this.Controls.Add(menuStrip);
 
             ToolStripMenuItem fileMenuItem = new ToolStripMenuItem("&File");
-
-            ToolStripMenuItem newMenuItem = new ToolStripMenuItem("&New", null, new EventHandler(NewMenuItem_Click), Keys.Control | Keys.N);
-            fileMenuItem.DropDownItems.Add(newMenuItem);
-
-            ToolStripMenuItem openMenuItem = new ToolStripMenuItem("&Open", null, new EventHandler(OpenMenuItem_Click), Keys.Control | Keys.O);
-            fileMenuItem.DropDownItems.Add(openMenuItem);
-
-            ToolStripMenuItem saveMenuItem = new ToolStripMenuItem("&Save", null, new EventHandler(SaveMenuItem_Click), Keys.Control | Keys.S);
-            fileMenuItem.DropDownItems.Add(saveMenuItem);
-
-            ToolStripMenuItem saveAsMenuItem = new ToolStripMenuItem("Save &As", null, new EventHandler(SaveAsMenuItem_Click));
-            fileMenuItem.DropDownItems.Add(saveAsMenuItem);
-
-            ToolStripMenuItem exportAsDocMenuItem = new ToolStripMenuItem("Export as &Doc", null, new EventHandler(ExportAsDocMenuItem_Click));
-            fileMenuItem.DropDownItems.Add(exportAsDocMenuItem);
-
-            ToolStripMenuItem exportAsCsvMenuItem = new ToolStripMenuItem("Export as &CSV", null, new EventHandler(ExportAsCsvMenuItem_Click));
-            fileMenuItem.DropDownItems.Add(exportAsCsvMenuItem);
-
             menuStrip.Items.Add(fileMenuItem);
 
-            zoomInButton = new ToolStripButton("Zoom In");
-            zoomInButton.Click += new EventHandler(ZoomInButton_Click);
+            CreateMenuItems(fileMenuItem,
+         ("&New", new EventHandler(NewMenuItem_Click), Keys.Control | Keys.N),
+         ("&Open", new EventHandler(OpenMenuItem_Click), Keys.Control | Keys.O),
+         ("Save &As", new EventHandler(SaveAsMenuItem_Click), null),
+         ("Export as &Doc", new EventHandler(ExportAsDocMenuItem_Click), null),
+         ("Export as &CSV", new EventHandler(ExportAsCsvMenuItem_Click), null),
+          ("Full Screen", new EventHandler(FullScreenMenuItem_Click), Keys.Control | Keys.Shift | Keys.A)
+     );
 
-            zoomOutButton = new ToolStripButton("Zoom Out");
-            zoomOutButton.Click += new EventHandler(ZoomOutButton_Click);
 
-            menuStrip.Items.Add(zoomInButton);
-            menuStrip.Items.Add(zoomOutButton);
+            CreateStripMenuButtons(
+  ("Zoom In", null, new EventHandler(ZoomInButton_Click), Keys.Control | Keys.Shift | Keys.Oemplus),
+    ("Zoom Out", null, new EventHandler(ZoomOutButton_Click), Keys.Control | Keys.Shift | Keys.OemMinus),
+    ("Preview", null, new EventHandler(PreviewMarkdownButton_Click), Keys.Control | Keys.Shift | Keys.P),
+            ("Format Markdown", null, new EventHandler(FormatMarkdownButton_Click), Keys.Control | Keys.Shift | Keys.F)
+
+);
 
             textBox = new System.Windows.Forms.TextBox
             {
                 Location = new System.Drawing.Point(0, menuStrip.Height),
                 Multiline = true,
                 ScrollBars = ScrollBars.Both,
-                Font = new Font("Microsoft Sans Serif", currentFontSize)
+                Font = new Font("Microsoft Sans Serif", currentFontSize),
+                Dock = DockStyle.Fill
             };
 
-            textBox.TextChanged += TextBox_TextChanged;
 
-            this.Controls.Add(textBox);
+            richTextBox = new RichTextBox()
+            {
+                Dock = DockStyle.Fill,
+                ReadOnly = true
+            };
+            sidePanel.Controls.Add(richTextBox);
+
+
+            splitContainer.Panel1.Controls.Add(textBox);
+            textBox.TextChanged += TextBox_TextChanged;
 
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.Form1_Resize);
+        }
+
+
+        private void FormatMarkdownButton_Click(object sender, EventArgs e)
+        {
+            textBox.Text = CorrectMarkdown(textBox.Text);
+        }
+        private string CorrectMarkdown(string text)
+        {
+            // Replace *string at the start of a line with * string
+            text = Regex.Replace(text, @"(\n|^)\*(\w)", "$1* $2");
+
+            // Replace #string and ##string at the start of a line with # string and ## string
+            text = Regex.Replace(text, @"(\n|^)#(\w)", "$1# $2");
+            text = Regex.Replace(text, @"(\n|^)##(\w)", "$1## $2");
+
+            // Replace 1.string and 1)string at the start of a line with 1. string and 1) string
+            text = Regex.Replace(text, @"(\n|^)(\d+\.)\s*(\w)", "$1$2 $3");
+            text = Regex.Replace(text, @"(\n|^)(\d+\))\s*(\w)", "$1$2 $3");
+
+            return text;
+        }
+
+        private void CreateStripMenuButtons(params (string Name, Image Image, EventHandler ClickEvent, Keys? ShortcutKeys)[] itemParams)
+        {
+            foreach (var itemParam in itemParams)
+            {
+                var menuItem = new ToolStripMenuItem(itemParam.Name, itemParam.Image, itemParam.ClickEvent);
+                if (itemParam.ShortcutKeys.HasValue)
+                {
+                    menuItem.ShortcutKeys = itemParam.ShortcutKeys.Value;
+                }
+                menuStrip.Items.Add(menuItem);
+            }
+        }
+
+        private void FullScreenMenuItem_Click(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Maximized)
+            {
+                this.WindowState = FormWindowState.Normal;
+            }
+            else
+            {
+                // Get the screen size
+                Rectangle screen = Screen.FromControl(this).WorkingArea;
+
+                // Calculate the desired size (5% gap on each side)
+                int width = (int)(screen.Width * 0.9);
+                int height = (int)(screen.Height * 0.9);
+
+                // Calculate the desired position (centered on the screen)
+                int left = (screen.Width - width) / 2;
+                int top = (screen.Height - height) / 2;
+
+                // Apply the size and position
+                this.StartPosition = FormStartPosition.Manual;
+                this.SetBounds(left, top, width, height);
+            }
+        }
+        private void CreateMenuItems(ToolStripMenuItem parentMenuItem, params (string title, EventHandler eventHandler, Keys? shortcutKeys)[] menuItems)
+        {
+            foreach (var (title, eventHandler, shortcutKeys) in menuItems)
+            {
+                ToolStripMenuItem menuItem = new ToolStripMenuItem(title, null, eventHandler);
+
+                if (shortcutKeys.HasValue)
+                {
+                    menuItem.ShortcutKeys = shortcutKeys.Value;
+                }
+
+                parentMenuItem.DropDownItems.Add(menuItem);
+            }
         }
 
         private void TextBox_TextChanged(object sender, EventArgs e)
@@ -200,23 +288,33 @@ namespace catPad
 
         private void ZoomInButton_Click(object sender, EventArgs e)
         {
-            if (currentFontSize < 72)  // Maximum size of 72
-            {
-                currentFontSize += 2;
-                textBox.Font = new Font("Microsoft Sans Serif", currentFontSize);
-            }
+            // Create the Font object for the textBox.
+            Font oldFont = textBox.Font;
+            Font newFont = new Font(oldFont.FontFamily, oldFont.Size + 2, oldFont.Style);
+            textBox.Font = newFont;
+            oldFont.Dispose();
+
+            // Create the Font object for the richTextBox.
+            oldFont = richTextBox.Font;
+            newFont = new Font(oldFont.FontFamily, oldFont.Size + 2, oldFont.Style);
+            richTextBox.Font = newFont;
+            oldFont.Dispose();
         }
 
         private void ZoomOutButton_Click(object sender, EventArgs e)
         {
-            if (currentFontSize > 2)  // Minimum size of 2
-            {
-                currentFontSize -= 2;
-                textBox.Font = new Font("Microsoft Sans Serif", currentFontSize);
-            }
+            // Create the Font object for the textBox.
+            Font oldFont = textBox.Font;
+            Font newFont = new Font(oldFont.FontFamily, oldFont.Size - 2, oldFont.Style);
+            textBox.Font = newFont;
+            oldFont.Dispose();
+
+            // Create the Font object for the richTextBox.
+            oldFont = richTextBox.Font;
+            newFont = new Font(oldFont.FontFamily, oldFont.Size - 2, oldFont.Style);
+            richTextBox.Font = newFont;
+            oldFont.Dispose();
         }
-
-
 
         private void ExportAsCsvMenuItem_Click(object sender, EventArgs e)
         {
@@ -233,5 +331,105 @@ namespace catPad
             }
         }
 
+
+        private void PreviewMarkdownButton_Click(object sender, EventArgs e)
+        {
+            UpdateMarkdownPreview();
+        }
+
+        private void UpdateMarkdownPreview()
+        {
+            richTextBox.Clear();
+
+            var lines = textBox.Text.Split('\n');
+            List<string> orderedList = null;
+            int orderedListLineNum = 1;
+
+            foreach (var line in lines)
+            {
+                if (Regex.IsMatch(line, @"^\d+\. ")) // Check if line starts with a number followed by a dot indicating an ordered list.
+                {
+                    // We're in an ordered list
+                    if (orderedList == null)
+                    {
+                        // This is the first line of the ordered list
+                        orderedList = new List<string>();
+                    }
+
+                    // Remove the original order number and store the line in the temporary list
+                    orderedList.Add(line.Substring(line.IndexOf('.') + 2));
+                }
+                else
+                {
+                    // We're not in an ordered list anymore
+                    if (orderedList != null)
+                    {
+                        // Append each line from the ordered list with a new order number
+                        foreach (var orderedLine in orderedList)
+                        {
+                            richTextBox.SelectionIndent = 10;  // Indent ordered list.
+                            richTextBox.AppendText(orderedListLineNum.ToString() + ". " + orderedLine);
+                            richTextBox.SelectionIndent = 0;
+                            richTextBox.AppendText("\n");
+                            orderedListLineNum++;
+                        }
+
+                        // Reset the ordered list
+                        orderedList = null;
+                        orderedListLineNum = 1;
+                    }
+
+                    if (line.StartsWith("# "))
+                    {
+                        // Add a title
+                        richTextBox.SelectionFont = new Font(richTextBox.Font, FontStyle.Bold);
+                        richTextBox.AppendText(line.Substring(2));
+                        richTextBox.SelectionFont = new Font(richTextBox.Font, FontStyle.Regular);
+                    }
+                    else if (line.StartsWith("## "))
+                    {
+                        // Add a subtitle
+                        richTextBox.SelectionFont = new Font(richTextBox.Font, FontStyle.Bold | FontStyle.Italic);
+                        richTextBox.AppendText(line.Substring(3));
+                        richTextBox.SelectionFont = new Font(richTextBox.Font, FontStyle.Regular);
+                    }
+                    else if (line.StartsWith("* "))
+                    {
+                        // Add a bullet point
+                        richTextBox.SelectionBullet = true;
+                        richTextBox.AppendText(line.Substring(2));
+                        richTextBox.SelectionBullet = false;
+                    }
+
+                    else if (line.Trim() == "///")
+                    {
+                        // Add a divider
+                        richTextBox.AppendText(new string('_', 30));  // Use 30 underscore characters for the divider
+                        richTextBox.AppendText("\n");
+                    }
+                    else
+                    {
+                        // Add regular text
+                        richTextBox.AppendText(line);
+                    }
+
+                    richTextBox.AppendText("\n");
+                }
+            }
+
+            // Handle case where the last line of the text is part of an ordered list
+            if (orderedList != null)
+            {
+                // Append each line from the ordered list with a new order number
+                foreach (var orderedLine in orderedList)
+                {
+                    richTextBox.SelectionIndent = 10;  // Indent ordered list.
+                    richTextBox.AppendText(orderedListLineNum.ToString() + ". " + orderedLine);
+                    richTextBox.SelectionIndent = 0;
+                    richTextBox.AppendText("\n");
+                    orderedListLineNum++;
+                }
+            }
+        }
     }
 }

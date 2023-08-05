@@ -35,6 +35,44 @@ namespace Helpers
             return content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
         }
 
+
+        public string ProcessToMarkdownPreview(string text)
+        {
+            string[] lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            StringBuilder markdownPreview = new StringBuilder();
+
+            foreach (string line in lines)
+            {
+                if (line.StartsWith("* "))
+                {
+                    // Bullet point
+                    markdownPreview.AppendLine(line);
+                }
+                else if (line.StartsWith("# "))
+                {
+                    // Title
+                    markdownPreview.AppendLine(line);
+                }
+                else if (line.StartsWith("## "))
+                {
+                    // Sub Title
+                    markdownPreview.AppendLine(line);
+                }
+                else if (Regex.IsMatch(line, @"^\d+\. ")) // Checking for an ordered list
+                {
+                    // Ordered list
+                    markdownPreview.AppendLine(line);
+                }
+                else
+                {
+                    // Regular text
+                    markdownPreview.AppendLine(line);
+                }
+            }
+
+            return markdownPreview.ToString();
+        }
+
         public string ProcessToCsv(string text)
         {
             string[] tickets = text.Split(new[] { "///" }, StringSplitOptions.None);
