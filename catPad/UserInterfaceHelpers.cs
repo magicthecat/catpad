@@ -81,6 +81,8 @@ namespace Helpers
     public class UserInterfaceHelper
     {
 
+           public delegate void HotKeyAction();
+
         public static SplitContainer CreateAndInitializeSplitContainer()
         {
             var splitContainer = new SplitContainer
@@ -100,6 +102,21 @@ namespace Helpers
             };
             return sidePanel;
         }
+
+
+    public static void HandleHotKey(KeyEventArgs e, Keys key, bool ctrl = false, bool shift = false, bool alt = false, HotKeyAction action = null)
+    {
+        if (action == null) return;
+
+        if (e.KeyCode == key && 
+            e.Control == ctrl && 
+            e.Shift == shift && 
+            e.Alt == alt)
+        {
+            action.Invoke();
+        }
+    }
+
 
         public static void ToggleFullScreen(Form form)
         {
@@ -132,6 +149,11 @@ namespace Helpers
         {
             action(control);
         }
+    }
+
+       public static void ResizeTextBoxBasedOnParent(Control textBox, Control parent, Control menuStrip)
+    {
+        textBox.Size = new Size(parent.ClientSize.Width, parent.ClientSize.Height - menuStrip.Height);
     }
 
     public static void ZoomIn(Control control, int zoomFactor)
