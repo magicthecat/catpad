@@ -5,6 +5,7 @@ namespace Helpers
     {
 
 
+
         public static void CreateStripMenuButtons(MenuStrip menuStrip, params (string Name, Image Image, EventHandler ClickEvent, Keys? ShortcutKeys)[] itemParams)
         {
             foreach (var itemParam in itemParams)
